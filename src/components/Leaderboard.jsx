@@ -1,5 +1,8 @@
 import { useState } from "react";
 import lbIcon from "../leaderboardIcon.svg";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+
 export default function Leaderboard({ leaderboard, userId }) {
   const [sortBy, setSortBy] = useState("rolls"); // default is to sort by rolls count
   let compareFunction;
@@ -20,7 +23,12 @@ export default function Leaderboard({ leaderboard, userId }) {
 
   // console.log("rendered"); // this component used to to re render twice (with the old approach)
   // if you clicked the button twice even though the value didn't change
-
+  let skeleStyle = {
+    width: "80%",
+    borderRadius: "0.15rem",
+    baseColor: "#e8e8e8",
+    highlightColor: "#f1f1f1",
+  };
   // top 10
   let elesArr = leaderboard
     .sort(compareFunction)
@@ -28,16 +36,23 @@ export default function Leaderboard({ leaderboard, userId }) {
     .map(({ name, timeTaken, count, id }) => {
       return (
         <li key={id} className={`${userId === id ? "choosen" : ""}`}>
-          <span>{name}</span>
-          <span>{count}</span>
-          <span>{timeTaken}</span>
+          <span>{name || <Skeleton {...skeleStyle} />}</span>
+          <span>{count || <Skeleton {...skeleStyle} />}</span>
+          <span>{timeTaken || <Skeleton {...skeleStyle} />}</span>
         </li>
       );
     });
   return (
     <div className="leaderboard">
       <span className="leaderboard-title">
-        Leaderboard <small>{leaderboard.length}</small>
+        Leaderboard
+        <small style={{ marginLeft: "10px" }}>
+          {Object.keys(leaderboard[0]).length ? (
+            leaderboard.length
+          ) : (
+            <Skeleton {...skeleStyle} width={"15%"} />
+          )}
+        </small>
       </span>
       <img className="lb-icon" src={lbIcon} />
       <div className="leaderboard-sort">

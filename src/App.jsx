@@ -7,81 +7,14 @@ import Leaderboard from "./components/Leaderboard";
 import Suggestions from "./components/Suggestions";
 import Header from "./components/Header";
 import TimeElapsedDisp from "./components/TimeElapsedDisp";
+import tenziesReducer from "./utils/tenziesReducer";
+import allNewDice from "./utils/allnewDice";
 
 function App() {
   const congratsAudio = new Audio(congratsMp3);
   const pantryID = "319f2108-7202-4669-9979-bfbd309ebdd7";
   const pantryBasketName = "Leaderboards";
 
-  function tenziesReducer(state, action) {
-    switch (action.type) {
-      case "start_game": {
-        return {
-          ...state,
-          startTime: new Date().getTime(),
-          interval: action.payload.interval,
-        };
-      }
-      case "win_game": {
-        return {
-          ...state,
-          tenzies: true,
-          interval: null,
-        };
-      }
-      case "play_again": {
-        return {
-          ...state,
-          dice: allNewDice(),
-          count: 0,
-          startTime: 0,
-          interval: null,
-          tenzies: false,
-        };
-      }
-      case "inc_count": {
-        return {
-          ...state,
-          count: state.count + 1,
-        };
-      }
-      case "roll": {
-        return {
-          ...state,
-          dice: state.dice.map((e) =>
-            !e.isHeld ? { ...e, value: ~~(Math.random() * 6) + 1 } : e
-          ),
-        };
-      }
-      case "update_state": {
-        return {
-          ...state,
-          [action.payload.propName]: action.payload.value,
-        };
-      }
-
-      case "fix_die": {
-        // don't hold the dice unless the user started the game and don't make him be able to select the dies after he wins
-        // else it will trigger the useEffect's callback function and will add his name to the leaderboards again!
-        let arr = [...state.dice];
-        arr[action.payload.index].isHeld = !arr[action.payload.index].isHeld;
-        return {
-          ...state,
-          dice: arr,
-        };
-      }
-      default: {
-        return state;
-      }
-    }
-  }
-  function initializeState(state) {
-    return {
-      ...state,
-      dice: allNewDice(),
-      userName: localStorage.getItem("tenziesName") || "Guest",
-    };
-  }
   const [state, dispatch] = useReducer(
     tenziesReducer,
     {
@@ -92,17 +25,19 @@ function App() {
       count: 0,
       startTime: 0,
       interval: null,
-      leaderboard: [],
+      leaderboard: [...Array(10).fill({})],
     },
     initializeState
   );
 
-  function allNewDice() {
-    return [...Array(10)].map(() => ({
-      value: ~~(Math.random() * 6) + 1,
-      isHeld: false,
-    }));
+  function initializeState(state) {
+    return {
+      ...state,
+      dice: allNewDice(),
+      userName: localStorage.getItem("tenziesName") || "Guest",
+    };
   }
+
   function checkWinCond(dice) {
     return dice.every(
       (die, i, arr) => die.isHeld && die.value === arr[0].value
@@ -120,7 +55,6 @@ function App() {
       dispatch({ type: "play_again" });
     }
   }
-
   let {
     count,
     startTime,
@@ -131,11 +65,10 @@ function App() {
     userId,
     leaderboard,
   } = state;
-  console.log(state);
+
   // USEEFFECT to load leaderboard from pantry to leaderboard state
   useEffect(() => {
     const myHeaders = new Headers();
-
     let arr = [];
     myHeaders.append("Content-Type", "application/json");
 
